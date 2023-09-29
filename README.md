@@ -39,9 +39,10 @@ docker ps -a
 You shall see the next services up and running:
 ```
                                                                                                        NAMES
-e13663df302f   clarus_mlflow_data_app                            "/bin/sh -c 'java -j…"   42 hours ago   Up 42 hours (unhealthy)   0.0.0.0:8083->8083/tcp, :::                                                                                                                                8083->8083/tcp, 0.0.0.0:9008->9000/tcp, :::9008->9000/tcp                                              be-dataapp-provider
-b9372f79f30f   rdlabengpa/ids_execution_core_container:v1.11.0   "/bin/sh -c 'java -j…"   42 hours ago   Up 42 hours (healthy)     0.0.0.0:8086->8086/tcp, :::                                                                                                                                8086->8086/tcp, 0.0.0.0:8889->8889/tcp, :::8889->8889/tcp, 0.0.0.0:8090->8449/tcp, :::8090->8449/tcp   ecc-provider
-82a8fd9040c5   rdlabengpa/ids_uc_data_app_platoon:v1.5           "/bin/sh -c 'java -j…"   42 hours ago   Up 42 hours               8080/tcp                   
+CONTAINER ID   IMAGE                                             COMMAND                  CREATED          STATUS                             PORTS                                                                    NAMES
+6ac137e8fa45   rdlabengpa/ids_uc_data_app_platoon:v1.5           "/bin/sh -c 'java -j…"   59 seconds ago   Up 58 seconds                      8080/tcp                                                                 uc-dataapp-provider
+f7b56a04e4a7   rdlabengpa/ids_execution_core_container:v1.11.0   "/bin/sh -c 'java -j…"   59 seconds ago   Up 58 seconds (healthy)            0.0.0.0:8086->8086/tcp, 0.0.0.0:8889->8889/tcp, 0.0.0.0:8090->8449/tcp   ecc-provider
+04b1ee96a6db   clarusproject/clarus_mlflow_data_app:0.0.1        "/bin/sh -c 'java -j…"   59 seconds ago   Up 58 seconds (health: starting)   0.0.0.0:8083->8083/tcp, 0.0.0.0:9008->9000/tcp                           be-dataapp-provider  
 ```
 
 TrueConnector is ready to be used by the aitoolkit experiments.
