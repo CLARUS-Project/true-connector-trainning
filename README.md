@@ -15,14 +15,12 @@ ENG TrueConnector is used, execution core and usage control provided by ENG have
 - Edit .env file and set the endpoints to access mlflow API and MinIO API
   ```
     # mlflow configuration
-    MLFLOW_TRACKING_URI=http://172.16.56.42:5000
-    MLFLOW_TRACKING_USERNAME=user
-    MLFLOW_TRACKING_PASSWORD=password
+    MLFLOW_TRACKING_URI=http://XXX.XXX.XXX.XXX:5000
+   
 
     # minio configuration
-    MINIO_URI=http://172.16.56.42:9000
-    MINIO_USERNAME=user
-    MINIO_PASSWORD=password
+    MINIO_URI=http://XXX.XXX.XXX.XXX:9000
+  
   ```
 - Login in Dockerhub using the clarusproject credentials provided by ENG
 - Execute docker-compose file
