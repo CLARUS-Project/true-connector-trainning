@@ -32,7 +32,7 @@ docker-compose up -d
 
 ## How to use
 
-Once docker-compose is finished, all the containers shall be up and running. To check it, write in terminal type in terminal
+Once docker-compose is finished, all the containers shall be up and running. To check it,  type in terminal
 ```
 docker ps -a
 ```
