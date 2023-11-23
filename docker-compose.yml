@@ -1,7 +1,7 @@
 version: '3.1'
 services:
   ecc-provider-mlops:
-    image: rdlabengpa/ids_execution_core_container:v1.11.0
+    image: rdlabengpa/ids_execution_core_container:v1.14.3
     deploy:
       resources:
         limits:
@@ -12,31 +12,27 @@ services:
         max-size: "200M"
     networks:
       - provider
-      
     container_name: ecc-provider-mlops
     ports:
-      - "${PROVIDER_PORT}:${INTERNAL_REST_PORT}"  #Port for exposing HTTP endpoints
+      - "${PROVIDER_PORT}:8449" #Port for exposing HTTP endpoints
       - "8890:8889"  #Exposed port for receiving data from another connector (REST)
       - "8087:8086"  #Exposed port for receiving data from another connector (WS)
-      #- "8889:8889"   #Exposed port for receiving data from another connector (REST)
-      #- "8086:8086"  #Exposed port for receiving data from another connector (WS)
+      #- "8889:8889" #Exposed port for receiving data from another connector (REST)
+      #- "8086:8086" #Exposed port for receiving data from another connector (WS)
     environment:
+      - "JDK_JAVA_OPTIONS=-Xmx1024m"
       - "SPRING_PROFILES_ACTIVE=docker"
-      - DATA_APP_ENDPOINT=${PROVIDER_DATA_APP_ENDPOINT}      #Data APP enpoint for consuming received data
-      - MULTIPART_EDGE=${PROVIDER_MULTIPART_EDGE}                      #Data APP endpoint multipart/mixed content type
+      - DATA_APP_ENDPOINT=${PROVIDER_DATA_APP_ENDPOINT} #Data APP enpoint for consuming received data
+      - MULTIPART_EDGE=${PROVIDER_MULTIPART_EDGE} #Data APP endpoint multipart/mixed content type
       - MULTIPART_ECC=${MULTIPART_ECC}
-      - REST_ENABLE_HTTPS=${REST_ENABLE_HTTPS}
+      - CONNECTOR_ID=${PROVIDER_ISSUER_CONNECTOR_URI}
       - IDSCP2=${IDSCP2}
       - WS_EDGE=${PROVIDER_WS_EDGE}
       - WS_ECC=${WS_ECC}
-      - UC_DATAAPP_URI=http://uc-dataapp-provider-mlops:8080/platoontec/PlatoonDataUsage/1.0/
-      - CLEARING_HOUSE=${CLEARING_HOUSE}
-      - PUBLIC_PORT=${PROVIDER_PORT}
+      - UC_DATAAPP_URI=https://uc-dataapp-provider-mlops:8080/platoontec/PlatoonDataUsage/1.0/
       - BROKER_URL=${BROKER_URL}
-      - DISABLE_SSL_VALIDATION=${DISABLE_SSL_VALIDATION}
       - CACHE_TOKEN=${CACHE_TOKEN}
       - FETCH_TOKEN_ON_STARTUP=${FETCH_TOKEN_ON_STARTUP}
-      - SERVER_SSL_ENABLED=${SERVER_SSL_ENABLED}
       - KEYSTORE_NAME=${KEYSTORE_NAME}
       - KEY_PASSWORD=${KEY_PASSWORD}
       - KEYSTORE_PASSWORD=${KEYSTORE_PASSWORD}
@@ -46,22 +42,22 @@ services:
       - DAPS_KEYSTORE_ALIAS=${PROVIDER_DAPS_KEYSTORE_ALIAS}
       - TRUSTORE_NAME=${TRUSTORE_NAME}
       - TRUSTORE_PASSWORD=${TRUSTORE_PASSWORD}
+      - FIREWALL=${PROVIDER_ECC_FIREWALL}
       - TZ=Europe/Rome
     volumes:
       - ./ecc_resources_provider:/config
       - ./ecc_cert:/cert
-      - ecc_provider_mlops_log:/var/log/ecc
-      - ecc_provider_mlops_sd:/sd
+      - ecc_provider_mlops_data:/home/nobody/data/
     extra_hosts:
       - "ecc-provider-mlops:172.17.0.1"
 
   uc-dataapp-provider-mlops:
-    image: rdlabengpa/ids_uc_data_app_platoon:v1.5
+    image: rdlabengpa/ids_uc_data_app_platoon:v1.7.5
     deploy:
       resources:
         limits:
           cpus: "1"
-          memory: 512M
+          memory: 256M
     logging:
       options:
         max-size: "100M"
@@ -69,16 +65,46 @@ services:
       - provider
     container_name: uc-dataapp-provider-mlops
     environment:
+      - "JDK_JAVA_OPTIONS=-Xmx256m"
+      - ECC_PORT=8449
+      - ECC_SELF_DESCRIPTION_URL=${PROVIDER_ECC_SELF_DESCRIPTION_URL}
+      - KEYSTORE_NAME=${KEYSTORE_NAME}
+      - KEY_PASSWORD=${KEY_PASSWORD}
+      - KEYSTORE_PASSWORD=${KEYSTORE_PASSWORD}
+      - ALIAS=${ALIAS}
       - TZ=Europe/Rome
     expose:
       - "8080"
     volumes:
       - ./uc-dataapp_resources_provider:/etc
       - uc_provider_mlops_data:/data
+      - ./ecc_cert:/cert
+
+  uc-dataapp-pip-provider-mlops:
+    image: rdlabengpa/ids_uc_data_app_platoon_pip:v1.0.0
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 256M
+    logging:
+      options:
+        max-size: "100M"
+    networks:
+      - provider
+    container_name: uc-dataapp-pip-provider-mlops
+    environment:
+      - "JDK_JAVA_OPTIONS=-Xmx256m"
+      - TZ=Europe/Rome
+    expose:
+      - "8085"
+    volumes:
+      - ./uc-dataapp-pip_resources_provider:/etc
 
   be-dataapp-provider-mlops:
-    #image: rdlabengpa/ids_be_data_app:v0.2.5
-    image: clarusproject/clarus_mlflow_data_app:0.0.1
+    #image: rdlabengpa/ids_be_data_app:v0.3.2
+    image: clarusproject/clarus_mlflow_data_app:0.1.0
+    #image: clarus_mlflow_data_app:0.1.0
     deploy:
       resources:
         limits:
@@ -91,42 +117,44 @@ services:
       - provider
     container_name: be-dataapp-provider-mlops
     ports:
-      - "8084:8083" 
-      #- "8083:8083" 
-      - "9008:9000"  
+      - "8184:8183"
+      #- "8183:8183"
+    expose:
+      - "9000"
     environment:
+      - "JDK_JAVA_OPTIONS=-Xmx512m"
       - "SPRING_PROFILES_ACTIVE=docker"
       - DATA_APP_MULTIPART=${PROVIDER_MULTIPART_EDGE}
-      - SERVER_SSL_ENABLED=${SERVER_SSL_ENABLED}
       - KEYSTORE_NAME=${KEYSTORE_NAME}
       - KEY_PASSWORD=${KEY_PASSWORD}
       - KEYSTORE_PASSWORD=${KEYSTORE_PASSWORD}
       - ALIAS=${ALIAS}
       - ECC_HOSTNAME=ecc-provider-mlops
+      - EXTRACT_PAYLOAD_FROM_RESPONSE=${EXTRACT_PAYLOAD_FROM_RESPONSE}
       - ECC_PORT=8887
       - TZ=Europe/Rome
       - ISSUER_CONNECTOR_URI=${PROVIDER_ISSUER_CONNECTOR_URI}
-      - EXTRACT_PAYLOAD_FROM_RESPONSE=${EXTRACT_PAYLOAD_FROM_RESPONSE}
+      - FIREWALL=${PROVIDER_DATA_APP_FIREWALL}
       - MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI}
       - MLFLOW_TRACKING_USERNAME=${MLFLOW_TRACKING_USERNAME}
       - MLFLOW_TRACKING_PASSWORD=${MLFLOW_TRACKING_PASSWORD}
       - MINIO_URI=${MINIO_URI}
       - MINIO_USERNAME=${MINIO_USERNAME}
-      - MINIO_PASSWORD=${MINIO_PASSWORD} 
+      - MINIO_PASSWORD=${MINIO_PASSWORD}      
     volumes:
       - ./be-dataapp_resources:/config
+      - be_dataapp_provider_mlops_data:/home/nobody/data/
       - ./ecc_cert:/cert
-      - be_dataapp_data_provider_mlops:/data
-
-  
       
+  
+
 networks:
- 
-  provider: { }
+  
+  provider: {}
 
 volumes:
-  ecc_provider_mlops_log : {}
-  ecc_provider_mlops_sd : {}
-  uc_provider_mlops_data : {}
-  be_dataapp_data_provider_mlops : {}
-
+  ecc_provider_mlops_data: {}
+  uc_provider_mlops_data: {}
+  
+  be_dataapp_provider_mlops_data:
+    external: true
