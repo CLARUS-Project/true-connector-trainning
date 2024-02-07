@@ -57,7 +57,7 @@ services:
       resources:
         limits:
           cpus: "1"
-          memory: 256M
+          memory: 512M
     logging:
       options:
         max-size: "100M"
@@ -65,7 +65,7 @@ services:
       - provider
     container_name: uc-dataapp-provider-mlops
     environment:
-      - "JDK_JAVA_OPTIONS=-Xmx256m"
+      - "JDK_JAVA_OPTIONS=-Xmx512m"
       - ECC_PORT=8449
       - ECC_SELF_DESCRIPTION_URL=${PROVIDER_ECC_SELF_DESCRIPTION_URL}
       - KEYSTORE_NAME=${KEYSTORE_NAME}
