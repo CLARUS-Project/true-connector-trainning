@@ -66,7 +66,7 @@ The TRueConnector used by the AIToolkit uses TLS certificates to provide or cons
 1.	Create public/private key in keystore
 
     
-    keytool -genkey -alias ***xx-tc-train*** -keyalg RSA -keypass changeit -storepass changeit -keystore ssl-server.jks -ext SAN=ip:***your public IP***, dns:uc-dataapp-provider,dns:ecc-provider,dns:be-dataapp-provider 
+    keytool -genkey -alias ***xx-tc-train*** -keyalg RSA -keypass changeit -storepass changeit -keystore ssl-server.jks -ext SAN=ip:***your public IP***, dns:uc-dataapp-provider,dns:ecc-provider-mlops,dns:be-dataapp-provider-mlops 
     
 2.	Export certificate
 
